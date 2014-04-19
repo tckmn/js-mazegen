@@ -1,3 +1,78 @@
+/*
+
+The MIT License (MIT)
+
+Copyright (c) 2014 Keyboard Fire <http://keyboardfire.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+*/
+
+
+InputTools = {
+    num: function(id, initVal, minVal, maxVal, lbl) {
+        var inputEl = document.createElement('input')
+        inputEl.type = 'text'
+        inputEl.id = id
+        inputEl.value = initVal
+        inputEl.onkeyup = function() {
+            var newVal = inputEl.value.replace(/[^0-9]/g, '')
+            if (newVal === '') newVal = '0'
+            if (inputEl.value !== newVal) inputEl.value = newVal
+        }
+
+        var inputElUp = document.createElement('input')
+        inputElUp.type = 'button'
+        inputElUp.value = '+'
+        inputElUp.onclick = function() {
+            var oldVal = parseInt(inputEl.value, 10)
+            inputEl.value = isNaN(oldVal) ? 1 : Math.min(oldVal + 1, maxVal)
+        }
+
+        var inputElDown = document.createElement('input')
+        inputElDown.type = 'button'
+        inputElDown.value = '-'
+        inputElDown.onclick = function() {
+            var oldVal = parseInt(inputEl.value, 10)
+            inputEl.value = isNaN(oldVal) ? 1 : Math.max(oldVal - 1, minVal)
+        }
+
+        var inputElLbl = document.createElement('label')
+        inputElLbl.htmlFor = id
+        inputElLbl.appendChild(document.createTextNode(lbl))
+
+        return [inputEl, inputElUp, inputElDown, inputElLbl]
+    },
+    checkbox: function(id, lbl) {
+        var animCb = document.createElement('input')
+        animCb.type = 'checkbox'
+        animCb.id = id
+
+        var animLbl = document.createElement('label')
+        animLbl.htmlFor = id
+        animLbl.appendChild(document.createTextNode(lbl))
+        animLbl.style.marginRight = '20px'
+
+        return [animCb, animLbl]
+    }
+}
+
 MazeGenInit = function(){
     var w = h = 40, // width and height of maze
         x = 0, y = 0, // position of cursor
@@ -21,7 +96,9 @@ MazeGenInit = function(){
           window.mozRequestAnimationFrame ||
           window.msRequestAnimationFrame ||
           window.oRequestAnimationFrame ||
-          (alert('Your browser does not support requestAnimationFrame. MazeGenJS will still work, but may be slower and laggy. Please upgrade your browser if you would like to get the full experience. The latest version of Google Chrome or Mozilla Firefox is recommended.'), function(f) {setTimeout(f, 1)})
+          (alert('Your browser does not support requestAnimationFrame. MazeGenJS will still work, but may be slower and laggy. ' +
+                 'Please upgrade your browser if you would like to get the full experience. The latest version of Google Chrome ' +
+                 'or Mozilla Firefox is recommended.'), function(f) {setTimeout(f, 1)})
 
     // initialization function (called every time user generates maze)
     function init(animate) {
@@ -40,7 +117,6 @@ MazeGenInit = function(){
 
         keepGoing = true
         if (animate) {
-
             tick()
         }
         else {
@@ -132,7 +208,7 @@ MazeGenInit = function(){
             draw()
         }
         if (keepGoing === true) requestAnimationFrame(tick)
-        else keepGoing()
+        else if (typeof keepGoing === 'function') keepGoing()
     }
 
     // stop the ticking and do a callback when successfully stopped
@@ -164,19 +240,16 @@ MazeGenInit = function(){
 
         var options = document.createElement('div')
         var optForm = document.createElement('form')
+        var addOption = function(arr) {
+            for (var i = 0; i < arr.length; i ++) options.appendChild(arr[i])
+            options.appendChild(document.createElement('br'))
+        }
 
-        var animCb = document.createElement('input')
-        animCb.type = 'checkbox'
-        animCb.id = 'animCb'
-        var animLbl = document.createElement('label')
-        animLbl.htmlFor = 'animCb'
-        animLbl.appendChild(document.createTextNode('Animate'))
-        animLbl.style.marginRight = '20px'
-        options.appendChild(animCb)
-        options.appendChild(animLbl)
+        var animCb = InputTools.checkbox('animCb', 'Animate')
+        addOption(animCb)
 
-        var animSpd = numInput('animSpd', 1, 0, Infinity, 'Speed (in squares per frame, can be changed while animating)')
-        for (var i = 0; i < animSpd.length; i ++) options.appendChild(animSpd[i])
+        var animSpd = InputTools.num('animSpd', 1, 0, Infinity, 'Speed (in squares per frame, can be changed while animating)')
+        addOption(animSpd)
         repAmt = function() { return parseInt(animSpd[0].value, 10) }
 
         var submitBtn = document.createElement('input')
@@ -187,47 +260,13 @@ MazeGenInit = function(){
         optForm.onsubmit = function(e) {
             e.preventDefault()
             if (mazeFinished()) {
-                init(animCb.checked)
+                init(animCb[0].checked)
             } else {
-                stopTick(function(){ init(animCb.checked) })
+                stopTick(function(){ init(animCb[0].checked) })
             }
         }
         options.appendChild(optForm)
         document.body.appendChild(options)
-    }
-
-    function numInput(id, initVal, minVal, maxVal, lbl) {
-        var inputEl = document.createElement('input')
-        inputEl.type = 'text'
-        inputEl.id = id
-        inputEl.value = initVal
-        inputEl.onkeyup = function() {
-            var newVal = inputEl.value.replace(/[^0-9]/g, '')
-            if (newVal === '') newVal = '0'
-            if (inputEl.value !== newVal) inputEl.value = newVal
-        }
-
-        var inputElUp = document.createElement('input')
-        inputElUp.type = 'button'
-        inputElUp.value = '+'
-        inputElUp.onclick = function() {
-            var oldVal = parseInt(inputEl.value, 10)
-            inputEl.value = isNaN(oldVal) ? 1 : Math.min(oldVal + 1, maxVal)
-        }
-
-        var inputElDown = document.createElement('input')
-        inputElDown.type = 'button'
-        inputElDown.value = '-'
-        inputElDown.onclick = function() {
-            var oldVal = parseInt(inputEl.value, 10)
-            inputEl.value = isNaN(oldVal) ? 1 : Math.max(oldVal - 1, minVal)
-        }
-
-        var inputElLbl = document.createElement('label')
-        inputElLbl.htmlFor = id
-        inputElLbl.appendChild(document.createTextNode(lbl))
-
-        return [inputEl, inputElUp, inputElDown, inputElLbl]
     }
 
     // each cell of the maze
