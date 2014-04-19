@@ -73,7 +73,7 @@ InputTools = {
     }
 }
 
-MazeGenInit = function(){
+MazeGenInit = function(container){
     var w = h = 40, // width and height of maze
         x = 0, y = 0, // position of cursor
         maze = new Array(w), // maze data
@@ -235,7 +235,7 @@ MazeGenInit = function(){
         cnv.width = totalSize * w
         cnv.height = totalSize * h
         cnv.style.border = '1px solid black'
-        document.body.appendChild(cnv)
+        ;(container || document.body).appendChild(cnv)
         ctx = cnv.getContext('2d')
 
         var options = document.createElement('div')
